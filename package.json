@@ -1,27 +1,14 @@
 {
     "name": "prompt-forge",
-    "version": "2.0.0",
+    "version": "3.0.0",
     "private": true,
-    "description": "Enterprise-grade Idea-to-Prompt Generator Platform",
-    "workspaces": [
-        "apps/*",
-        "packages/*"
-    ],
     "scripts": {
-        "dev": "npm run dev:api",
-        "dev:api": "npm run dev --workspace=@prompt-forge/api",
-        "dev:web": "npm run dev --workspace=@prompt-forge/web",
-        "dev:all": "npm run dev:api & npm run dev:web",
-        "build": "npm run build --workspaces --if-present",
-        "build:api": "npm run build --workspace=@prompt-forge/api",
-        "build:web": "npm run build --workspace=@prompt-forge/web",
-        "test": "npm run test --workspace=@prompt-forge/api",
-        "lint": "npm run lint --workspaces --if-present",
-        "clean": "npm run clean --workspaces --if-present"
+        "dev": "cd apps/web && npm run dev",
+        "build": "cd apps/web && npm run build",
+        "start": "cd apps/web && npm run start",
+        "install:all": "cd apps/web && npm install"
     },
     "engines": {
         "node": ">=18.0.0"
-    },
-    "author": "Prompt Forge Team",
-    "license": "MIT"
+    }
 }

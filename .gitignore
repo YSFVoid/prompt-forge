@@ -1,33 +1,12 @@
-# Dependencies
 node_modules/
-.pnp
-.pnp.js
-
-# Build outputs
-dist/
 .next/
 out/
-
-# Environment files
+dist/
 .env
 .env.local
-.env.*.local
-
-# IDE
-.vscode/
-.idea/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-npm-debug.log*
-
-# Test coverage
-coverage/
-
-# Misc
 *.tsbuildinfo
 next-env.d.ts
+.DS_Store
+Thumbs.db
+*.log
+coverage/

@@ -1,42 +1,26 @@
-# Prompt Forge 🔥
+# Prompt Forge
 
-> Transform your ideas into powerful AI prompts that work with any model.
+A premium AI chatbot specialized in **prompt engineering**. Chat naturally or generate powerful prompts for any AI model.
 
-An enterprise-grade **Idea → Prompt Generator** platform with a Node.js/Express API and Next.js frontend.
+## Stack
 
-## 🏗️ Architecture
+| Layer | Tech |
+|-------|------|
+| Frontend | Next.js 14 (App Router), TypeScript, Tailwind CSS, Framer Motion |
+| Auth | NextAuth.js (Google OAuth, Email Magic Link) |
+| Database | MongoDB (Mongoose) |
+| AI | Groq API (LLama 3.1) |
 
-```
-prompt-forge/
-├── apps/
-│   ├── api/        # Express + TypeScript REST API
-│   └── web/        # Next.js 14 Dashboard (App Router)
-├── packages/
-│   └── shared/     # Shared TypeScript types + Zod validators
-├── docs/
-└── README.md
-```
+## Features
 
-## ✨ Features
+- Normal conversational chat with AI assistant
+- Prompt engineering mode (toggle or auto-detect)
+- Master Prompt + Variant A/B generation
+- Conversation history with search
+- Google OAuth and Email login
+- Premium dark purple UI with animated backgrounds
 
-- 🎨 Modern dark purple glassmorphism UI with animated gradient blobs
-- 🌍 Multi-language support (English, Arabic, Darija — auto-detected)
-- ⚡ Groq-powered AI prompt generation (OpenAI-compatible)
-- 🧠 Smart idea detection — asks clarifying questions for vague ideas
-- 📋 One-click copy + quality score badge
-- 👍👎 Feedback buttons
-- 📜 Local history (last 10 prompts)
-- 🔐 API key authentication with hashed storage (argon2)
-- 📊 Rate limiting + daily quotas per key
-- 🛡️ Admin endpoints for key management and usage stats
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- **Node.js** ≥ 18
-- **MongoDB** (optional — API works without it, data won't persist)
-- **Groq API key** — get one free at [console.groq.com](https://console.groq.com)
+## Quick Start
 
 ### 1. Install Dependencies
 
@@ -46,120 +30,67 @@ npm install
 
 ### 2. Configure Environment
 
-```bash
-# API
-cp apps/api/.env.example apps/api/.env
-# Edit apps/api/.env and set your GROQ_API_KEY
+Copy `apps/web/.env.example` to `apps/web/.env` and fill in:
 
-# Web
-cp apps/web/.env.example apps/web/.env
+```
+MONGODB_URI=mongodb+srv://...
+NEXTAUTH_SECRET=your-secret
+GROQ_API_KEY=gsk_...
+GOOGLE_CLIENT_ID=...     (optional)
+GOOGLE_CLIENT_SECRET=... (optional)
 ```
 
-#### Required API Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `GROQ_API_KEY` | Your Groq API key | **Required** |
-| `ADMIN_KEY` | Admin secret for `/v1/admin/*` endpoints | (disabled if not set) |
-| `MONGODB_URI` | MongoDB connection string | (disabled if not set) |
-| `PORT` | API server port | `3001` |
-| `DEFAULT_MODEL` | Default Groq model | `llama-3.1-8b-instant` |
-| `CORS_ORIGIN` | Allowed CORS origins | `*` |
-
-### 3. Run Development Servers
+### 3. Run Development Server
 
 ```bash
-# API only
-npm run dev:api
-
-# Web only
-npm run dev:web
-
-# Both
-npm run dev:all
+npm run dev
 ```
 
-- **API**: http://localhost:3001
-- **Web**: http://localhost:3000
+Open [http://localhost:3000](http://localhost:3000)
 
-### 4. Run Tests
+## API Endpoints
 
-```bash
-npm test
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/v1/chat` | Send message (auth required) |
+| GET | `/api/v1/history` | List conversations |
+| GET | `/api/v1/history/:id` | Load conversation messages |
+| GET | `/api/v1/health` | Health check |
+
+## Project Structure
+
+```
+apps/web/
+  app/
+    api/auth/[...nextauth]/route.ts
+    api/v1/chat/route.ts
+    api/v1/history/route.ts
+    api/v1/health/route.ts
+    page.tsx
+    signin/page.tsx
+    history/page.tsx
+    layout.tsx
+    globals.css
+  components/
+    BackgroundBlobs.tsx
+    ChatComposer.tsx
+    HistoryPanel.tsx
+    ModeToggle.tsx
+    NoiseOverlay.tsx
+    OutputPanel.tsx
+    Providers.tsx
+    Sidebar.tsx
+    Skeleton.tsx
+    Toast.tsx
+    UserMenu.tsx
+  lib/
+    auth.ts
+    groq.ts
+    models.ts
+    mongodb.ts
+    promptDetector.ts
 ```
 
-## 🔑 API Authentication
-
-### Creating an Admin Key
-
-Set `ADMIN_KEY` in your `apps/api/.env` file:
-
-```env
-ADMIN_KEY=my-super-secret-admin-key-123
-```
-
-### Creating User API Keys (via Admin Endpoint)
-
-```bash
-curl -X POST http://localhost:3001/v1/admin/keys \
-  -H "Content-Type: application/json" \
-  -H "x-admin-key: my-super-secret-admin-key-123" \
-  -d '{"name": "MyApp", "rateLimitPerMin": 30, "quotaPerDay": 500}'
-```
-
-The response will include the raw API key **once** — save it securely:
-
-```json
-{
-  "success": true,
-  "apiKey": {
-    "id": "...",
-    "name": "MyApp",
-    "key": "pf_abc123...",
-    "rateLimitPerMin": 30,
-    "quotaPerDay": 500
-  }
-}
-```
-
-### Using the API Key
-
-Send it in the `x-api-key` header:
-
-```bash
-curl -X POST http://localhost:3001/v1/prompt \
-  -H "Content-Type: application/json" \
-  -H "x-api-key: pf_abc123..." \
-  -d '{"idea": "A mobile app that tracks water intake with smart reminders"}'
-```
-
-## 📡 API Endpoints
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `POST` | `/v1/prompt` | `x-api-key` | Generate prompt from idea |
-| `POST` | `/v1/feedback` | `x-api-key` | Submit feedback (👍/👎) |
-| `GET` | `/v1/health` | None | Health check |
-| `GET` | `/v1/models` | None | List available models |
-| `POST` | `/v1/admin/keys` | `x-admin-key` | Create user API key |
-| `DELETE` | `/v1/admin/keys/:id` | `x-admin-key` | Revoke API key |
-| `GET` | `/v1/admin/usage` | `x-admin-key` | View usage stats |
-
-## 🚢 Deployment
-
-### Railway
-
-1. Create a new Railway project
-2. Add a **MongoDB** service
-3. Add a **Node.js** service for the API:
-   - Set build command: `npm run build:api`
-   - Set start command: `npm run start --workspace=@prompt-forge/api`
-   - Add environment variables (`GROQ_API_KEY`, `MONGODB_URI`, `ADMIN_KEY`)
-4. Add a **Node.js** service for the web:
-   - Set build command: `npm run build:web`
-   - Set start command: `npm run start --workspace=@prompt-forge/web`
-   - Set `NEXT_PUBLIC_API_URL` to the API service URL
-
-## 📝 License
+## License
 
 MIT

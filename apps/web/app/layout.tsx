@@ -1,28 +1,26 @@
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
+import Providers from '@/components/Providers';
+import BackgroundBlobs from '@/components/BackgroundBlobs';
+import NoiseOverlay from '@/components/NoiseOverlay';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-    title: 'Prompt Forge | AI Prompt Generator',
-    description:
-        'Transform your ideas into powerful, detailed AI prompts that work with any model. Professional prompt engineering at your fingertips.',
+    title: 'Prompt Forge | AI Chat & Prompt Engineering',
+    description: 'A premium AI chatbot specialized in prompt engineering. Chat naturally or generate powerful prompts for any AI model.',
 };
 
-export default function RootLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
-        <html lang="en">
-            <body>
-                {/* Animated blob background */}
-                <div className="animated-bg">
-                    <div className="blob blob-1" />
-                    <div className="blob blob-2" />
-                    <div className="blob blob-3" />
-                </div>
-                {/* Main content */}
-                <div className="relative z-10">{children}</div>
+        <html lang="en" className={inter.variable}>
+            <body className="font-sans">
+                <Providers>
+                    <BackgroundBlobs />
+                    <NoiseOverlay />
+                    <div className="relative z-10">{children}</div>
+                </Providers>
             </body>
         </html>
     );
