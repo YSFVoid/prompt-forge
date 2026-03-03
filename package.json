@@ -1,6 +1,6 @@
 {
     "name": "prompt-forge",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "private": true,
     "description": "Enterprise-grade Idea-to-Prompt Generator Platform",
     "workspaces": [
@@ -11,11 +11,13 @@
         "dev": "npm run dev:api",
         "dev:api": "npm run dev --workspace=@prompt-forge/api",
         "dev:web": "npm run dev --workspace=@prompt-forge/web",
+        "dev:all": "npm run dev:api & npm run dev:web",
         "build": "npm run build --workspaces --if-present",
         "build:api": "npm run build --workspace=@prompt-forge/api",
         "build:web": "npm run build --workspace=@prompt-forge/web",
+        "test": "npm run test --workspace=@prompt-forge/api",
         "lint": "npm run lint --workspaces --if-present",
-        "clean": "npm run clean --workspaces --if-present && rimraf node_modules"
+        "clean": "npm run clean --workspaces --if-present"
     },
     "engines": {
         "node": ">=18.0.0"

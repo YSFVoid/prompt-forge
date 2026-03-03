@@ -1,50 +1,33 @@
-// ============================================================
-// Prompt Forge API - Environment Configuration
-// ============================================================
-
-import { z } from 'zod';
 import dotenv from 'dotenv';
-
 dotenv.config();
 
-const envSchema = z.object({
-    PORT: z.string().default('3001').transform(Number),
-    NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-    PUBLIC_MODE: z.string().default('true').transform((v) => v === 'true'),
-    MONGODB_URI: z.string().optional(),
-    GROQ_API_KEY: z.string().min(1, 'GROQ_API_KEY is required'),
-    GROQ_MODEL: z.string().default('llama-3.1-8b-instant'),
-    ADMIN_KEY: z.string().optional(),
-    CORS_ORIGIN: z.string().default('*'),
-});
-
-const parsed = envSchema.safeParse(process.env);
-
-if (!parsed.success) {
-    console.error('❌ Invalid environment variables:', parsed.error.flatten().fieldErrors);
-    process.exit(1);
-}
-
-export const env = parsed.data;
-
 export const config = {
-    port: env.PORT,
-    nodeEnv: env.NODE_ENV,
-    isProduction: env.NODE_ENV === 'production',
-    publicMode: env.PUBLIC_MODE,
+    port: parseInt(process.env.PORT || '3001', 10),
+    nodeEnv: process.env.NODE_ENV || 'development',
+    isProduction: process.env.NODE_ENV === 'production',
+
     mongodb: {
-        uri: env.MONGODB_URI || '',
-        enabled: !!env.MONGODB_URI,
+        uri: process.env.MONGODB_URI || '',
+        enabled: !!process.env.MONGODB_URI,
     },
+
     groq: {
-        apiKey: env.GROQ_API_KEY,
-        model: env.GROQ_MODEL,
+        apiKey: process.env.GROQ_API_KEY || '',
+        model: process.env.DEFAULT_MODEL || 'llama-3.1-8b-instant',
+        baseUrl: 'https://api.groq.com/openai/v1/chat/completions',
     },
+
     admin: {
-        key: env.ADMIN_KEY || '',
-        enabled: !!env.ADMIN_KEY,
+        key: process.env.ADMIN_KEY || '',
+        enabled: !!process.env.ADMIN_KEY,
     },
+
     cors: {
-        origin: env.CORS_ORIGIN,
+        origin: process.env.CORS_ORIGIN || '*',
+    },
+
+    rateLimit: {
+        defaultPerMin: 30,
+        defaultQuotaPerDay: 500,
     },
 };

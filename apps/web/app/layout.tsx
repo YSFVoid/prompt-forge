@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-    title: 'Prompt Forge | Transform Ideas into Powerful AI Prompts',
-    description: 'Generate professional, detailed prompts from your ideas. Works with any AI model.',
-    keywords: ['prompt engineering', 'AI prompts', 'GPT', 'Claude', 'LLM'],
+    title: 'Prompt Forge | AI Prompt Generator',
+    description:
+        'Transform your ideas into powerful, detailed AI prompts that work with any model. Professional prompt engineering at your fingertips.',
 };
 
 export default function RootLayout({
@@ -14,16 +14,15 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
-            <body className="bg-animated-gradient min-h-screen">
-                {/* Background orbs */}
-                <div className="floating-orb w-96 h-96 bg-purple-600 top-[-200px] left-[-100px]" />
-                <div className="floating-orb w-80 h-80 bg-pink-600 bottom-[-150px] right-[-100px]" style={{ animationDelay: '-4s' }} />
-                <div className="floating-orb w-64 h-64 bg-blue-600 top-[40%] right-[10%]" style={{ animationDelay: '-2s' }} />
-
+            <body>
+                {/* Animated blob background */}
+                <div className="animated-bg">
+                    <div className="blob blob-1" />
+                    <div className="blob blob-2" />
+                    <div className="blob blob-3" />
+                </div>
                 {/* Main content */}
-                <main className="relative z-10">
-                    {children}
-                </main>
+                <div className="relative z-10">{children}</div>
             </body>
         </html>
     );

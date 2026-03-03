@@ -1,32 +1,23 @@
-// ============================================================
-// Prompt Forge API - Feedback Model
-// ============================================================
-
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IFeedback extends Document {
-    promptOutputId: mongoose.Types.ObjectId;
-    rating: 'positive' | 'negative';
-    variant?: 'master' | 'variantA' | 'variantB';
-    comment?: string;
+    outputId: mongoose.Types.ObjectId;
+    conversationId?: mongoose.Types.ObjectId;
+    rating: number;
+    note?: string;
     createdAt: Date;
 }
 
 const feedbackSchema = new Schema<IFeedback>(
     {
-        promptOutputId: {
-            type: Schema.Types.ObjectId,
-            ref: 'PromptOutput',
-            required: true,
-            index: true
-        },
-        rating: { type: String, enum: ['positive', 'negative'], required: true },
-        variant: { type: String, enum: ['master', 'variantA', 'variantB'] },
-        comment: { type: String, maxlength: 1000 },
+        outputId: { type: Schema.Types.ObjectId, ref: 'PromptOutput', required: true },
+        conversationId: { type: Schema.Types.ObjectId, ref: 'Conversation' },
+        rating: { type: Number, enum: [0, 1], required: true },
+        note: { type: String, maxlength: 1000 },
     },
-    { timestamps: { createdAt: true, updatedAt: false } }
+    { timestamps: true }
 );
 
-feedbackSchema.index({ rating: 1 });
+feedbackSchema.index({ outputId: 1 });
 
 export const Feedback = mongoose.model<IFeedback>('Feedback', feedbackSchema);

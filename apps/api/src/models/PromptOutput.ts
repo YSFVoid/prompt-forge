@@ -1,38 +1,35 @@
-// ============================================================
-// Prompt Forge API - Prompt Output Model
-// ============================================================
-
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IPromptOutput extends Document {
-    messageId: mongoose.Types.ObjectId;
+    conversationId: mongoose.Types.ObjectId;
+    ideaSummary: string;
     masterPrompt: string;
     variantA: string;
     variantB: string;
-    ideaSummary: string;
-    clarifyingQuestions?: string[];
     modelUsed: string;
-    processingTimeMs: number;
+    usage: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+    qualityScore?: number;
     createdAt: Date;
 }
 
 const promptOutputSchema = new Schema<IPromptOutput>(
     {
-        messageId: {
-            type: Schema.Types.ObjectId,
-            ref: 'Message',
-            required: true,
-            index: true
-        },
-        masterPrompt: { type: String, required: true },
-        variantA: { type: String },
-        variantB: { type: String },
-        ideaSummary: { type: String },
-        clarifyingQuestions: [{ type: String }],
+        conversationId: { type: Schema.Types.ObjectId, ref: 'Conversation', required: true },
+        ideaSummary: { type: String, default: '' },
+        masterPrompt: { type: String, default: '' },
+        variantA: { type: String, default: '' },
+        variantB: { type: String, default: '' },
         modelUsed: { type: String, required: true },
-        processingTimeMs: { type: Number, required: true },
+        usage: {
+            promptTokens: Number,
+            completionTokens: Number,
+            totalTokens: Number,
+        },
+        qualityScore: { type: Number },
     },
-    { timestamps: { createdAt: true, updatedAt: false } }
+    { timestamps: true }
 );
+
+promptOutputSchema.index({ conversationId: 1 });
 
 export const PromptOutput = mongoose.model<IPromptOutput>('PromptOutput', promptOutputSchema);

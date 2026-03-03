@@ -1,36 +1,23 @@
-// ============================================================
-// Prompt Forge API - Message Model
-// ============================================================
-
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IMessage extends Document {
     conversationId: mongoose.Types.ObjectId;
     role: 'user' | 'assistant';
     content: string;
-    ideaScore?: number;
-    language?: string;
-    processingTimeMs?: number;
+    lang: string;
     createdAt: Date;
 }
 
 const messageSchema = new Schema<IMessage>(
     {
-        conversationId: {
-            type: Schema.Types.ObjectId,
-            ref: 'Conversation',
-            required: true,
-            index: true
-        },
+        conversationId: { type: Schema.Types.ObjectId, ref: 'Conversation', required: true },
         role: { type: String, enum: ['user', 'assistant'], required: true },
         content: { type: String, required: true },
-        ideaScore: { type: Number, min: 0, max: 1 },
-        language: { type: String },
-        processingTimeMs: { type: Number },
+        lang: { type: String, default: 'en' },
     },
-    { timestamps: { createdAt: true, updatedAt: false } }
+    { timestamps: true }
 );
 
-messageSchema.index({ conversationId: 1, createdAt: 1 });
+messageSchema.index({ conversationId: 1 });
 
 export const Message = mongoose.model<IMessage>('Message', messageSchema);

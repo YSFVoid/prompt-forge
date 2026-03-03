@@ -1,5 +1,1 @@
-// ============================================================
-// Prompt Forge API - Database Index
-// ============================================================
-
-export { connectDatabase, disconnectDatabase, getConnection } from './connection';
+export { connectDatabase, disconnectDatabase } from './connection';

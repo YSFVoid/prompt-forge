@@ -1,143 +1,160 @@
-// ============================================================
-// Prompt Forge API - Groq Integration Service
-// ============================================================
-
-import Groq from 'groq-sdk';
 import { config } from '../config/env';
 import { logger } from '../utils/logger';
+import { llmOutputSchema, type LLMOutput } from '@prompt-forge/shared';
 
-const groq = new Groq({
-    apiKey: config.groq.apiKey,
-});
+const SYSTEM_PROMPT_EN = `You are PROMPT-FORGE AI. Your ONLY job is to generate prompts from user ideas.
+You NEVER solve or implement the idea yourself. You ONLY create prompts that other AIs can use.
 
-// Language-specific system prompts
-const SYSTEM_PROMPTS: Record<string, string> = {
-    en: `You are Prompt Forge, an expert prompt engineer. Your job is to transform user ideas into powerful, detailed prompts that work with any AI model.
+## RULES:
+1. If the user's message is NOT a clear idea (too vague, random greeting, or single word):
+   - Return 2-4 clarifying questions to understand the idea better
+   - Leave all prompt fields as empty strings
+   - Set quality_score to 0
 
-Given a user's idea, you will:
-1. Summarize the core concept in 1-2 sentences
-2. Generate a comprehensive Master Prompt that includes context, goals, constraints, and expected output format
-3. Generate Variant A: A concise, focused version of the prompt
-4. Generate Variant B: An advanced version with additional techniques (chain of thought, examples, etc.)
+2. If the user's message IS a clear idea:
+   - Write a concise idea_summary (1-2 sentences)
+   - Generate master_prompt: a comprehensive, detailed prompt usable with ANY AI model
+   - Generate variant_a: concise focused version
+   - Generate variant_b: advanced version with chain-of-thought, examples
+   - Set quality_score (0-100) based on how well-defined the idea was
+   - Leave clarifying_questions as empty array
 
-If the idea is unclear or lacks detail, generate 2-3 clarifying questions instead of prompts.
-
-ALWAYS respond in valid JSON format with this structure:
+## OUTPUT FORMAT (strict JSON):
 {
-  "idea_summary": "Brief summary of the idea",
-  "clarifying_questions": [],
-  "master_prompt": "The comprehensive master prompt",
-  "variant_a": "Concise focused version",
-  "variant_b": "Advanced version with techniques"
+  "idea_summary": "string",
+  "clarifying_questions": ["string"],
+  "master_prompt": "string",
+  "variant_a": "string",
+  "variant_b": "string",
+  "quality_score": 0
 }
 
-If asking questions, set prompts to empty strings and fill clarifying_questions array.`,
+IMPORTANT: Return ONLY valid JSON. No markdown, no code fences, no extra text.`;
 
-    ar: `أنت Prompt Forge، خبير في هندسة البرومبتات. مهمتك تحويل أفكار المستخدمين إلى برومبتات قوية ومفصلة.
+const SYSTEM_PROMPT_AR = `أنت PROMPT-FORGE AI. مهمتك الوحيدة هي توليد بروامبتات من أفكار المستخدمين.
+لا تحل أو تنفذ الفكرة أبداً. أنت فقط تصنع بروامبتات يمكن لذكاءات صناعية أخرى استخدامها.
 
-قم بإنشاء:
-1. ملخص للفكرة
-2. برومبت رئيسي شامل
-3. نسخة مختصرة (Variant A)
-4. نسخة متقدمة (Variant B)
+## القواعد:
+1. إذا لم تكن رسالة المستخدم فكرة واضحة: أرجع 2-4 أسئلة توضيحية.
+2. إذا كانت فكرة واضحة: أنشئ ملخص الفكرة + البروامبت الرئيسي + البديل أ + البديل ب.
 
-إذا كانت الفكرة غير واضحة، اطرح 2-3 أسئلة توضيحية.
+أرجع JSON صالح فقط بنفس الهيكل.`;
 
-أجب دائماً بصيغة JSON صالحة.`,
+const SYSTEM_PROMPT_DARIJA = `نتا PROMPT-FORGE AI. الخدمة ديالك الوحيدة هي توليد بروامبتات من أفكار الناس.
+ما تحل أو تنفذ الفكرة أبداً. نتا غير كتصاوب بروامبتات لي غادي تستخدمهم ذكاءات صناعية أخرى.
 
-    darija: `نتا Prompt Forge، خبير ف صناعة البرومبتات. خدمتك هي تحول الأفكار ديال الناس لبرومبتات قوية.
+## القواعد:
+1. إلا ماكانتش رسالة المستخدم فكرة واضحة: رجع 2-4 أسئلة باش تفهم.
+2. إلا كانت فكرة واضحة: صاوب ملخص + البروامبت الرئيسي + البديل أ + البديل ب.
 
-دير:
-1. ملخص للفكرة
-2. برومبت رئيسي كامل
-3. نسخة مختصرة (Variant A)
-4. نسخة متطورة (Variant B)
+رجع JSON صحيح فقط.`;
 
-إلا كانت الفكرة ماشي واضحة، سول 2-3 أسئلة.
-
-جاوب ديما ب JSON صحيح.`,
-};
-
-export interface GroqInput {
-    idea: string;
-    language?: string;
-    examples?: string[];
-    previousContext?: { questions: string[]; answers: string[] };
+function getSystemPrompt(lang: string): string {
+    if (lang === 'darija') return SYSTEM_PROMPT_DARIJA;
+    if (lang === 'ar') return SYSTEM_PROMPT_AR;
+    return SYSTEM_PROMPT_EN;
 }
 
-export interface GroqOutput {
-    output: {
-        idea_summary: string;
-        clarifying_questions: string[];
-        master_prompt: string;
-        variant_a: string;
-        variant_b: string;
-    };
+export interface GroqCallResult {
+    output: LLMOutput;
     tokensUsed: number;
-    modelUsed: string;
+    model: string;
 }
 
-export async function callGroq(input: GroqInput): Promise<GroqOutput> {
-    const { idea, language = 'en', examples = [], previousContext } = input;
+interface GroqApiResponse {
+    choices: { message: { content: string } }[];
+    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
+    model?: string;
+}
 
-    const systemPrompt = SYSTEM_PROMPTS[language] || SYSTEM_PROMPTS.en;
+export async function callGroq(
+    idea: string,
+    language: string,
+    previousContext?: { questions: string[]; answers: string[] }
+): Promise<GroqCallResult> {
+    let userMessage = idea;
 
-    let userMessage = `User Idea: ${idea}`;
-
-    if (examples.length > 0) {
-        userMessage += `\n\nReference Examples:\n${examples.map((e, i) => `${i + 1}. ${e}`).join('\n')}`;
-    }
-
-    if (previousContext) {
-        userMessage += '\n\nPrevious Q&A:\n';
+    if (previousContext && previousContext.questions.length > 0) {
+        userMessage += '\n\nPrevious clarifying Q&A:\n';
         previousContext.questions.forEach((q, i) => {
             userMessage += `Q: ${q}\nA: ${previousContext.answers[i] || 'Not answered'}\n`;
         });
     }
 
+    const body = {
+        model: config.groq.model,
+        messages: [
+            { role: 'system', content: getSystemPrompt(language) },
+            { role: 'user', content: userMessage },
+        ],
+        temperature: 0.7,
+        max_tokens: 2048,
+        response_format: { type: 'json_object' },
+    };
+
+    let parsed = await attemptGroqCall(body);
+
+    if (!parsed) {
+        logger.warn('First Groq parse failed, attempting repair retry');
+        parsed = await attemptGroqCall(body);
+    }
+
+    if (!parsed) {
+        throw new GroqBadResponseError('Failed to get valid JSON from Groq after retry');
+    }
+
+    return parsed;
+}
+
+async function attemptGroqCall(body: object): Promise<GroqCallResult | null> {
     try {
-        const response = await groq.chat.completions.create({
-            model: config.groq.model,
-            messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userMessage },
-            ],
-            temperature: 0.7,
-            max_tokens: 2048,
-            response_format: { type: 'json_object' },
+        const response = await fetch(config.groq.baseUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${config.groq.apiKey}`,
+            },
+            body: JSON.stringify(body),
         });
 
-        const content = response.choices[0]?.message?.content || '{}';
-        const parsed = JSON.parse(content);
+        if (!response.ok) {
+            const errorText = await response.text();
+            logger.error({ status: response.status, body: errorText }, 'Groq API error');
+
+            if (response.status === 429) {
+                throw new Error('rate limit');
+            }
+            throw new GroqBadResponseError(`Groq returned ${response.status}`);
+        }
+
+        const data = (await response.json()) as GroqApiResponse;
+        const content = data.choices?.[0]?.message?.content || '{}';
+
+        const rawParsed = JSON.parse(content);
+        const validated = llmOutputSchema.safeParse(rawParsed);
+
+        if (!validated.success) {
+            logger.warn({ errors: validated.error.issues }, 'LLM output validation failed');
+            return null;
+        }
 
         return {
-            output: {
-                idea_summary: parsed.idea_summary || '',
-                clarifying_questions: parsed.clarifying_questions || [],
-                master_prompt: parsed.master_prompt || '',
-                variant_a: parsed.variant_a || '',
-                variant_b: parsed.variant_b || '',
-            },
-            tokensUsed: response.usage?.total_tokens || 0,
-            modelUsed: config.groq.model,
+            output: validated.data,
+            tokensUsed: data.usage?.total_tokens || 0,
+            model: data.model || config.groq.model,
         };
     } catch (error) {
-        logger.error({ error }, 'Groq API call failed');
-        throw new Error('Failed to generate prompt. Please try again.');
+        if (error instanceof GroqBadResponseError || (error instanceof Error && error.message === 'rate limit')) {
+            throw error;
+        }
+        logger.error({ error }, 'Groq call failed');
+        return null;
     }
 }
 
-// Language detection
-export function detectLanguage(text: string): string {
-    const arabicPattern = /[\u0600-\u06FF]/;
-    const darijaWords = ['واش', 'كيفاش', 'علاش', 'فين', 'شنو', 'ديال'];
-
-    if (arabicPattern.test(text)) {
-        const lowerText = text.toLowerCase();
-        if (darijaWords.some((word) => lowerText.includes(word))) {
-            return 'darija';
-        }
-        return 'ar';
+export class GroqBadResponseError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'GroqBadResponseError';
     }
-    return 'en';
 }
