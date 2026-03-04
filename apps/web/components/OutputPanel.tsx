@@ -4,14 +4,17 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Copy, Check, ThumbsUp, ThumbsDown, Wand2, MessageSquare } from 'lucide-react';
 import Skeleton from './Skeleton';
+import FeedbackBar from './FeedbackBar';
 
 interface ChatMessage {
+    id?: string;
     role: 'user' | 'assistant';
     content: string;
     type: 'chat' | 'prompt_pack';
     masterPrompt?: string;
     variantA?: string;
     variantB?: string;
+    conversationId?: string;
 }
 
 interface OutputPanelProps {
@@ -57,13 +60,19 @@ export default function OutputPanel({ messages, loading }: OutputPanelProps) {
                         {msg.role === 'user' ? (
                             <UserBubble content={msg.content} />
                         ) : msg.type === 'prompt_pack' ? (
-                            <PromptPackCard
-                                masterPrompt={msg.masterPrompt || ''}
-                                variantA={msg.variantA || ''}
-                                variantB={msg.variantB || ''}
-                            />
+                            <>
+                                <PromptPackCard
+                                    masterPrompt={msg.masterPrompt || ''}
+                                    variantA={msg.variantA || ''}
+                                    variantB={msg.variantB || ''}
+                                />
+                                <FeedbackBar messageId={msg.id} conversationId={msg.conversationId} />
+                            </>
                         ) : (
-                            <AssistantBubble content={msg.content} />
+                            <>
+                                <AssistantBubble content={msg.content} />
+                                <FeedbackBar messageId={msg.id} conversationId={msg.conversationId} />
+                            </>
                         )}
                     </motion.div>
                 ))}

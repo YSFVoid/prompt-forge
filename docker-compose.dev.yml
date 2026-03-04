@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  web:
+    build: ./apps/web
+    ports:
+      - "3000:3000"
+    env_file: ./apps/web/.env
+    depends_on:
+      - engine-gateway
+    restart: unless-stopped
+
+  engine-gateway:
+    build: ./apps/engine-gateway
+    ports:
+      - "4000:4000"
+    environment:
+      GATEWAY_PORT: "4000"
+      ML_SERVICE_URL: http://ml-service:5000
+      RETRIEVER_URL: http://retriever-cpp:6000
+    depends_on:
+      - ml-service
+      - retriever-cpp
+    restart: unless-stopped
+
+  ml-service:
+    build: ./apps/ml-service
+    ports:
+      - "5000:5000"
+    environment:
+      ML_PORT: "5000"
+      MONGODB_URI: ${MONGODB_URI}
+      ADMIN_KEY: ${ADMIN_KEY:-}
+    restart: unless-stopped
+
+  retriever-cpp:
+    build: ./apps/retriever-cpp
+    ports:
+      - "6000:6000"
+    environment:
+      RETRIEVER_PORT: "6000"
+    restart: unless-stopped

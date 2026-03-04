@@ -4,9 +4,12 @@
     "private": true,
     "scripts": {
         "dev": "cd apps/web && npm run dev",
+        "dev:gateway": "cd apps/engine-gateway && go run .",
+        "dev:ml": "cd apps/ml-service && python main.py",
         "build": "cd apps/web && npm run build",
         "start": "cd apps/web && npm run start",
-        "install:all": "cd apps/web && npm install"
+        "install:web": "cd apps/web && npm install",
+        "install:ml": "cd apps/ml-service && pip install -r requirements.txt"
     },
     "engines": {
         "node": ">=18.0.0"

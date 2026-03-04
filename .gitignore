@@ -1,12 +1,24 @@
 node_modules/
 .next/
-out/
-dist/
 .env
 .env.local
-*.tsbuildinfo
-next-env.d.ts
+*.log
+
+# Go
+apps/engine-gateway/engine-gateway
+apps/engine-gateway/engine-gateway.exe
+
+# Python
+apps/ml-service/__pycache__/
+apps/ml-service/*.pyc
+apps/ml-service/artifacts/
+apps/ml-service/.venv/
+
+# C++
+apps/retriever-cpp/retriever
+apps/retriever-cpp/retriever.exe
+apps/retriever-cpp/*.o
+
+# OS
 .DS_Store
 Thumbs.db
-*.log
-coverage/

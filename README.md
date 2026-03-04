@@ -1,95 +1,117 @@
 # Prompt Forge
 
-A premium AI chatbot specialized in **prompt engineering**. Chat naturally or generate powerful prompts for any AI model.
+AI-powered chatbot specializing in prompt engineering. Normal chat + prompt generation with a 3-language ML engine.
+
+## Architecture
+
+```
+┌──────────┐     ┌─────────────────┐     ┌─────────────┐
+│  Next.js │────▶│  Engine Gateway │────▶│  Python ML  │
+│  :3000   │     │  (Go) :4000     │     │  (FastAPI)  │
+│          │     │                 │     │  :5000      │
+│  - Auth  │     │  - idea_score   │     │             │
+│  - Chat  │     │  - quality_score│     │  - train    │
+│  - UI    │     │  - retrieve     │     │  - predict  │
+└──────────┘     │  - cache        │     └─────────────┘
+                 │                 │     ┌─────────────┐
+                 │                 │────▶│  C++ Retrvr │
+                 └─────────────────┘     │  :6000      │
+                                         │  - search   │
+                                         └─────────────┘
+```
 
 ## Stack
 
 | Layer | Tech |
 |-------|------|
-| Frontend | Next.js 14 (App Router), TypeScript, Tailwind CSS, Framer Motion |
-| Auth | NextAuth.js (Google OAuth, Email Magic Link) |
-| Database | MongoDB (Mongoose) |
-| AI | Groq API (LLama 3.1) |
-
-## Features
-
-- Normal conversational chat with AI assistant
-- Prompt engineering mode (toggle or auto-detect)
-- Master Prompt + Variant A/B generation
-- Conversation history with search
-- Google OAuth and Email login
-- Premium dark purple UI with animated backgrounds
+| Frontend | Next.js 14 + TypeScript + Tailwind + Framer Motion |
+| Auth | NextAuth (Google OAuth + Email magic link) |
+| API | Next.js Route Handlers |
+| LLM | Groq (llama-3.1-8b-instant) |
+| Gateway | Go HTTP server with caching |
+| ML | Python FastAPI (scikit-learn) |
+| Retriever | C++ TF-IDF cosine similarity |
+| Database | MongoDB (Mongoose + NextAuth adapter) |
 
 ## Quick Start
 
-### 1. Install Dependencies
+```bash
+# 1. Clone
+git clone https://github.com/YSFVoid/prompt-forge.git
+cd prompt-forge
+
+# 2. Install web deps
+cd apps/web && npm install
+
+# 3. Configure env
+cp .env.example apps/web/.env
+# Edit apps/web/.env with your keys
+
+# 4. Run web
+npm run dev  # http://localhost:3000
+```
+
+### Run All Services
 
 ```bash
-npm install
-```
-
-### 2. Configure Environment
-
-Copy `apps/web/.env.example` to `apps/web/.env` and fill in:
-
-```
-MONGODB_URI=mongodb+srv://...
-NEXTAUTH_SECRET=your-secret
-GROQ_API_KEY=gsk_...
-GOOGLE_CLIENT_ID=...     (optional)
-GOOGLE_CLIENT_SECRET=... (optional)
-```
-
-### 3. Run Development Server
-
-```bash
+# Terminal 1: Web
 npm run dev
+
+# Terminal 2: Gateway (requires Go)
+npm run dev:gateway
+
+# Terminal 3: ML Service (requires Python)
+npm run dev:ml
+
+# Terminal 4: Retriever (requires g++)
+cd apps/retriever-cpp && make && ./retriever
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+### Docker (all services)
 
-## API Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/v1/chat` | Send message (auth required) |
-| GET | `/api/v1/history` | List conversations |
-| GET | `/api/v1/history/:id` | Load conversation messages |
-| GET | `/api/v1/health` | Health check |
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
 
 ## Project Structure
 
 ```
-apps/web/
-  app/
-    api/auth/[...nextauth]/route.ts
-    api/v1/chat/route.ts
-    api/v1/history/route.ts
-    api/v1/health/route.ts
-    page.tsx
-    signin/page.tsx
-    history/page.tsx
-    layout.tsx
-    globals.css
-  components/
-    BackgroundBlobs.tsx
-    ChatComposer.tsx
-    HistoryPanel.tsx
-    ModeToggle.tsx
-    NoiseOverlay.tsx
-    OutputPanel.tsx
-    Providers.tsx
-    Sidebar.tsx
-    Skeleton.tsx
-    Toast.tsx
-    UserMenu.tsx
-  lib/
-    auth.ts
-    groq.ts
-    models.ts
-    mongodb.ts
-    promptDetector.ts
+prompt-forge/
+├── apps/
+│   ├── web/                  # Next.js frontend + API
+│   │   ├── app/              # Pages + API routes
+│   │   ├── components/       # 12 Framer Motion components
+│   │   └── lib/              # Auth, DB, Groq, models
+│   ├── engine-gateway/       # Go internal gateway
+│   ├── ml-service/           # Python ML training + inference
+│   └── retriever-cpp/        # C++ TF-IDF retriever
+├── docker-compose.dev.yml
+├── .env.example
+└── README.md
 ```
+
+## API Routes
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/v1/chat` | ✅ | Send message, get AI response |
+| GET | `/api/v1/history` | ✅ | List conversations |
+| GET | `/api/v1/history/:id` | ✅ | Get conversation messages |
+| POST | `/api/v1/feedback` | ✅ | Submit feedback (👍👎) |
+| GET | `/api/v1/health` | ❌ | Health check |
+
+## Gateway API (internal)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/infer/idea_score` | Score text as idea (0-1) |
+| POST | `/infer/quality_score` | Score prompt quality (0-1) |
+| POST | `/retrieve/examples` | Get similar prompt examples |
+| POST | `/reload` | Clear cache, reload artifacts |
+
+## Environment Variables
+
+See `.env.example` for all required variables.
 
 ## License
 

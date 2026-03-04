@@ -44,3 +44,47 @@ export const Conversation: Model<IConversation> =
 
 export const Message: Model<IMessage> =
     mongoose.models.Message || mongoose.model<IMessage>('Message', messageSchema);
+
+export interface IFeedback extends Document {
+    userId: string;
+    conversationId?: mongoose.Types.ObjectId;
+    messageId?: string;
+    rating: number;
+    note?: string;
+    createdAt: Date;
+}
+
+const feedbackSchema = new Schema<IFeedback>(
+    {
+        userId: { type: String, required: true, index: true },
+        conversationId: { type: Schema.Types.ObjectId, ref: 'Conversation' },
+        messageId: { type: String },
+        rating: { type: Number, required: true },
+        note: { type: String, default: '' },
+    },
+    { timestamps: true }
+);
+
+export interface IArtifact extends Document {
+    name: string;
+    version: string;
+    createdAt: Date;
+    metadata: Record<string, any>;
+    filePath?: string;
+}
+
+const artifactSchema = new Schema<IArtifact>(
+    {
+        name: { type: String, required: true, index: true },
+        version: { type: String, required: true },
+        metadata: { type: Schema.Types.Mixed, default: {} },
+        filePath: { type: String },
+    },
+    { timestamps: true }
+);
+
+export const Feedback: Model<IFeedback> =
+    mongoose.models.Feedback || mongoose.model<IFeedback>('Feedback', feedbackSchema);
+
+export const Artifact: Model<IArtifact> =
+    mongoose.models.Artifact || mongoose.model<IArtifact>('Artifact', artifactSchema);
