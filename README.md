@@ -24,14 +24,6 @@ AI chatbot specializing in prompt engineering. Normal chat + prompt generation w
 | ML Service | 5000 | `apps/ml-service` |
 | Retriever | 6000 | `apps/retriever-cpp` |
 
-## Setup
-
-```bash
-cd apps/web && npm install
-cp .env.example apps/web/.env
-npm run dev
-```
-
 ## API
 
 | Method | Path | Auth |
