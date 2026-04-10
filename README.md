@@ -15,25 +15,6 @@ AI chatbot specializing in prompt engineering. Normal chat + prompt generation w
 | Retriever | C++ TF-IDF |
 | Database | MongoDB |
 
-## Services
-
-| Service | Port | Path |
-|---------|------|------|
-| Web | 3000 | `apps/web` |
-| Engine Gateway | 4000 | `apps/engine-gateway` |
-| ML Service | 5000 | `apps/ml-service` |
-| Retriever | 6000 | `apps/retriever-cpp` |
-
-## API
-
-| Method | Path | Auth |
-|--------|------|------|
-| POST | `/api/v1/chat` | Yes |
-| GET | `/api/v1/history` | Yes |
-| GET | `/api/v1/history/:id` | Yes |
-| POST | `/api/v1/feedback` | Yes |
-| GET | `/api/v1/health` | No |
-
 ## License
 
 MIT
